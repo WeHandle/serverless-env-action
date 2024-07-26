@@ -1,0 +1,12 @@
+{
+  "name": "serverlessyml-env-action",
+  "author": "PedroSantos",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@actions/core": "^1.2.6",
+    "@actions/exec": "^1.0.4",
+    "dotenv": "^16.4.5",
+    "js-yaml": "^4.1.0"
+  }
+}
