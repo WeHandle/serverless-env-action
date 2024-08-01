@@ -1,10 +1,10 @@
-name: 'ServerlessYml Env Action'
-description: 'Configures the ServerlessYml Env Action to be used in github workflows'
+name: 'Serverless Env Action'
+description: 'Configures the Serverless Env Action to be used in github workflows'
 inputs:
   tool-version:
-    description: 'ServerlessYml Env Action Tool Version'
+    description: 'Serverless Env Action Tool Version'
     required: true
-    default: '1.0.0'
+    default: '2.0.0'
 runs:
   using: 'node16'
   main: 'index.js'
