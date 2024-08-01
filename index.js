@@ -10,7 +10,7 @@ async function run() {
     const version = core.getInput('tool-version');
 
     // Display the action version
-    await exec.exec(`echo "Wehandle ServerlessYml Env Action version ${version}"`);
+    await exec.exec(`echo "Wehandle Serverless Env Action version ${version}"`);
 
     // Load variables from the .env file
     const envConfig = dotenv.config().parsed;
