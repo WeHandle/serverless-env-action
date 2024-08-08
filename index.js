@@ -103,6 +103,8 @@ function updateServerlessTs(dados) {
     const printer = ts.createPrinter();
     const updatedTs = printer.printFile(result.transformed[0]);
 
+    console.log(updatedTs);
+
     // Write the updated TypeScript code back to the file
     fs.writeFileSync('serverless.ts', updatedTs, 'utf8');
 
