@@ -36,11 +36,10 @@ function updateServerlessYaml(dados) {
     const data = yaml.load(fileContents);
 
     // Add environment variables from .env to serverless.yml
-    const envVars = process.env;
     data.provider.environment = {
       ...data.provider.environment,
       ...Object.keys(dados).reduce((acc, key) => {
-        acc[key] = envVars[key];
+        acc[key] = dados[key];
         return acc;
       }, {})
     };
@@ -61,30 +60,55 @@ function updateServerlessTs(dados) {
     // Read the contents of the serverless.ts file
     const fileContents = fs.readFileSync('serverless.ts', 'utf8');
 
-    // Compile TypeScript to JavaScript
-    const result = ts.transpileModule(fileContents, {
-      compilerOptions: { module: ts.ModuleKind.CommonJS }
-    });
+    // Create a SourceFile object from the TypeScript source
+    const sourceFile = ts.createSourceFile('serverless.ts', fileContents, ts.ScriptTarget.Latest, true);
 
-    // Evaluate the transpiled JavaScript to get the serverless config object
-    let serverlessConfig = eval(result.outputText);
+    // Traverse and modify the AST
+    const transformer = (context) => (rootNode) => {
+      function visit(node) {
+        if (ts.isObjectLiteralExpression(node)) {
+          const environmentNode = node.properties.find(prop =>
+            ts.isPropertyAssignment(prop) &&
+            prop.name.getText() === 'environment'
+          );
 
-    // Add environment variables from dados to serverlessConfig
-    const envVars = process.env;
-    serverlessConfig.provider.environment = {
-      ...serverlessConfig.provider.environment,
-      ...Object.keys(dados).reduce((acc, key) => {
-        acc[key] = envVars[key];
-        return acc;
-      }, {})
+          if (environmentNode && ts.isPropertyAssignment(environmentNode)) {
+            const updatedProperties = [
+              ...environmentNode.initializer.properties,
+              ...Object.keys(dados).map(key => ts.factory.createPropertyAssignment(
+                ts.factory.createIdentifier(key),
+                ts.factory.createStringLiteral(dados[key])
+              ))
+            ];
+
+            const newEnvironmentNode = ts.factory.updatePropertyAssignment(
+              environmentNode,
+              environmentNode.name,
+              ts.factory.createObjectLiteralExpression(updatedProperties, true)
+            );
+
+            const newNode = ts.factory.updateObjectLiteralExpression(node,
+              node.properties.map(prop => prop === environmentNode ? newEnvironmentNode : prop)
+            );
+
+            return newNode;
+          }
+        }
+        return ts.visitEachChild(node, visit, context);
+      }
+      return ts.visitNode(rootNode, visit);
     };
 
-    //write in file
-    fs.writeFileSync('serverless.ts',serverlessConfig,'utf8');
+    const result = ts.transform(sourceFile, [transformer]);
+    const printer = ts.createPrinter();
+    const updatedTs = printer.printFile(result.transformed[0]);
+
+    // Write the updated TypeScript code back to the file
+    fs.writeFileSync('serverless.ts', updatedTs, 'utf8');
 
     console.log('serverless.ts updated successfully!');
   } catch (e) {
-    console.log(e);
+    console.log('Error:', e);
   }
 }
 
