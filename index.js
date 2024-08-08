@@ -79,11 +79,9 @@ function updateServerlessTs(dados) {
       }, {})
     };
 
-    // Convert the modified object back to TypeScript
-    const updatedTs = `export default ${JSON.stringify(serverlessConfig, null, 2)};`;
+    //write in file
+    fs.writeFileSync('serverless.ts',serverlessConfig,'utf8');
 
-    // Write the updated TypeScript back to the file
-    fs.writeFileSync('serverless.ts', updatedTs, 'utf8');
     console.log('serverless.ts updated successfully!');
   } catch (e) {
     console.log(e);
